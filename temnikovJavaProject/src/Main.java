@@ -16,6 +16,6 @@ public class Main {
         }
 
         SystemMonitor systemMonitor = new SystemMonitor();
-        System.out.println(systemMonitor.trackCpuUsage());
+        systemMonitor.track();
     }
 }
