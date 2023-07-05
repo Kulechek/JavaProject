@@ -3,15 +3,26 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import com.sun.management.OperatingSystemMXBean;
 
 public class SystemMonitor {
     private String os = "";
-    private int trackSecondsInterval = 0;
+    private int trackCpu;
+    private int trackRam;
+    private int trackDisk;
+    private int trackNet;
+    private int trackSecondsInterval;
 
     SystemMonitor() {
-        trackSecondsInterval = ConfigManager.getConfigValue("trackSecondsInterval");
         whatIsOs();
+        trackCpu = ConfigManager.getConfigValue("trackCpu");
+        trackRam = ConfigManager.getConfigValue("trackRam");
+        trackDisk = ConfigManager.getConfigValue("trackDisk");
+        trackNet = ConfigManager.getConfigValue("trackNet");
+        trackSecondsInterval = ConfigManager.getConfigValue("trackSecondsInterval");
     }
 
     private void whatIsOs() {
@@ -19,9 +30,31 @@ public class SystemMonitor {
     }
 
     public void track() {
-        System.out.println("CPU usage: " + trackCpuUsage() + " %");
-        System.out.println("Ram usage: "  +  trackRamUsage() + " %");
-        System.out.println("Disk usage: " + trackDiskUsage() + "%");
+        Timer timer = new Timer();
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                if(trackCpu == 1) {
+                    System.out.println("CPU usage: " + trackCpuUsage() + " %");
+                }
+
+                if(trackRam == 1) {
+                    System.out.println("Ram usage: "  +  trackRamUsage() + " %");
+                }
+
+                if(trackDisk == 1) {
+                    System.out.println("Disk usage: " + trackDiskUsage() + "%");
+                }
+
+                if(trackNet == 1) {
+                    System.out.println("DO");
+                }
+                System.out.println();
+            }
+        };
+
+        timer.scheduleAtFixedRate(task, 0, 1000 * trackSecondsInterval);
     }
 
     private double trackCpuUsage() {
@@ -60,6 +93,7 @@ public class SystemMonitor {
                         String cpuUsageString = parts[1].trim().split(",")[3];
                         double cpuUsage = Double.parseDouble(cpuUsageString.replace("id", "").trim());
                         useCpu = 100 - cpuUsage;
+                        useCpu = Math.round(useCpu * 100.0) / 100.0;
                     }
                     break;
                 }
@@ -85,6 +119,7 @@ public class SystemMonitor {
                         String cpuUsage = cpuUsageString.substring(0, cpuUsageString.indexOf("%"));
                         double cpuUsageDouble = Double.parseDouble(cpuUsage);
                         useCpu = 100 - cpuUsageDouble;
+                        useCpu = Math.round(useCpu * 100.0) / 100.0;
                     }
                     break;
                 }

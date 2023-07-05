@@ -11,7 +11,6 @@ public class Main {
             configReader.readConfigFile("src/config.cfg");
             configReader.outAllKeyVal();
         } catch (IOException e) {
-            // Обработка исключения
             e.printStackTrace();
         }
 
