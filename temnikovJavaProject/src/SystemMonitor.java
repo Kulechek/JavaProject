@@ -15,14 +15,16 @@ public class SystemMonitor {
     private int trackDisk;
     private int trackNet;
     private int trackSecondsInterval;
+    private String trackNetAddress;
 
     SystemMonitor() {
         whatIsOs();
-        trackCpu = ConfigManager.getConfigValue("trackCpu");
-        trackRam = ConfigManager.getConfigValue("trackRam");
-        trackDisk = ConfigManager.getConfigValue("trackDisk");
-        trackNet = ConfigManager.getConfigValue("trackNet");
-        trackSecondsInterval = ConfigManager.getConfigValue("trackSecondsInterval");
+        trackCpu = Integer.valueOf(ConfigManager.getConfigValue("trackCpu"));
+        trackRam = Integer.valueOf(ConfigManager.getConfigValue("trackRam"));
+        trackDisk = Integer.valueOf(ConfigManager.getConfigValue("trackDisk"));
+        trackNet = Integer.valueOf(ConfigManager.getConfigValue("trackNet"));
+        trackSecondsInterval = Integer.valueOf(ConfigManager.getConfigValue("trackSecondsInterval"));
+        trackNetAddress = ConfigManager.getConfigValue("trackNetAddress");
     }
 
     private void whatIsOs() {
@@ -48,7 +50,7 @@ public class SystemMonitor {
                 }
 
                 if(trackNet == 1) {
-                    System.out.println("DO");
+                    System.out.println("Ping: " + trackNetUsage(trackNetAddress));
                 }
                 System.out.println();
             }
@@ -144,8 +146,21 @@ public class SystemMonitor {
         return diskUsagePercentage;
     }
 
-    public static void trackNetUsage() {
+    private double trackNetUsage(String dnsServer) {
+        long retPingTime = 0;
+        if (DNS.isValidDNSServer(dnsServer)) {
+            long pingTime = DNS.pingDNS(dnsServer);
+            if(pingTime != -1) {
+                retPingTime = pingTime;
+            } else {
+                trackNet = 0;
+            }
+        } else {
+            System.out.println("Некорректный DNS сервер.");
+            trackNet = 0;
+        }
 
+        return retPingTime;
     }
 
     private double trackRamUsageLinux() {

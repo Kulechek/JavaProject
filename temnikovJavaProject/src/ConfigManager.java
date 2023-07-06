@@ -6,7 +6,7 @@ import java.io.BufferedReader;
 
 
 public class ConfigManager {
-    private static Map<String, Integer> configValues;
+    private static Map<String, String> configValues;
     ConfigManager() {
         configValues = new HashMap<>();
     }
@@ -19,14 +19,14 @@ public class ConfigManager {
             if (parts.length == 2) {
                 String key = parts[0].trim();
                 String value = parts[1].trim();
-                configValues.put(key, Integer.valueOf(value));
+                configValues.put(key, value);
             }
         }
 
         reader.close();
     }
 
-    public static Integer getConfigValue(String key) {
+    public static String getConfigValue(String key) {
         return configValues.get(key);
     }
 
