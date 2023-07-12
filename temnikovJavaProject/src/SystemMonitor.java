@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
+import java.sql.SQLException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -33,26 +34,46 @@ public class SystemMonitor {
 
     public void track() {
         Timer timer = new Timer();
+        DataBaseManager dataBaseManager = new DataBaseManager(Constants.databaseUrl, Constants.databaseUsername, Constants.databasePassword);
+        try {
+            dataBaseManager.connect();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
+                double rezTrackCpuUsage = 0;
                 if(trackCpu == 1) {
-                    System.out.println("CPU usage: " + trackCpuUsage() + " %");
+                    rezTrackCpuUsage = trackCpuUsage();
+                    System.out.println("CPU usage: " + rezTrackCpuUsage + " %");
                 }
 
+                double rezTrackRamUsage = 0;
                 if(trackRam == 1) {
-                    System.out.println("Ram usage: "  +  trackRamUsage() + " %");
+                    rezTrackRamUsage = trackRamUsage();
+                    System.out.println("Ram usage: "  +  rezTrackRamUsage + " %");
                 }
 
+                double rezTrackDiskUsage = 0;
                 if(trackDisk == 1) {
-                    System.out.println("Disk usage: " + trackDiskUsage() + "%");
+                    rezTrackDiskUsage = trackDiskUsage();
+                    System.out.println("Disk usage: " + rezTrackDiskUsage + "%");
                 }
 
+                double rezTrackNetUsage = 0;
                 if(trackNet == 1) {
-                    System.out.println("Ping: " + trackNetUsage(trackNetAddress));
+                    rezTrackNetUsage = trackNetUsage(trackNetAddress);
+                    System.out.println("Ping: " + rezTrackNetUsage + " ms");
                 }
                 System.out.println();
+
+                try {
+                    dataBaseManager.insertRecord(rezTrackCpuUsage, rezTrackRamUsage, rezTrackDiskUsage, rezTrackNetUsage);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
         };
 
