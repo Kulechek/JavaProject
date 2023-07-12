@@ -16,15 +16,21 @@ public class SystemMonitor {
     private int trackDisk;
     private int trackNet;
     private int trackSecondsInterval;
+    private int trackTimeMinute;
     private String trackNetAddress;
 
     SystemMonitor() {
         whatIsOs();
+        getConfigVar();
+    }
+
+    private void getConfigVar() {
         trackCpu = Integer.valueOf(ConfigManager.getConfigValue("trackCpu"));
         trackRam = Integer.valueOf(ConfigManager.getConfigValue("trackRam"));
         trackDisk = Integer.valueOf(ConfigManager.getConfigValue("trackDisk"));
         trackNet = Integer.valueOf(ConfigManager.getConfigValue("trackNet"));
         trackSecondsInterval = Integer.valueOf(ConfigManager.getConfigValue("trackSecondsInterval"));
+        trackTimeMinute = Integer.valueOf(ConfigManager.getConfigValue("trackTimeMinute"));
         trackNetAddress = ConfigManager.getConfigValue("trackNetAddress");
     }
 
@@ -78,6 +84,16 @@ public class SystemMonitor {
         };
 
         timer.scheduleAtFixedRate(task, 0, 1000 * trackSecondsInterval);
+
+        try {
+            Thread.sleep(trackTimeMinute * 60 * 1000); // Подождать trackTimeMinute минут
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Останавливаем таймер и задачу
+        task.cancel();
+        timer.cancel();
     }
 
     private double trackCpuUsage() {
