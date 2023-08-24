@@ -1,25 +1,43 @@
+package com.example.temnikovJavaProject.services;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
-import java.sql.SQLException;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.sql.Timestamp;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import com.example.temnikovJavaProject.ConfigManager;
+import com.example.temnikovJavaProject.DNS;
+import com.example.temnikovJavaProject.models.TestPost;
 import com.sun.management.OperatingSystemMXBean;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-public class SystemMonitor {
+@Service
+public class SystemMonitorService {
     private String os = "";
     private int trackCpu;
     private int trackRam;
     private int trackDisk;
     private int trackNet;
-    private int trackSecondsInterval;
-    private int trackTimeMinute;
+    private int trackSecondsInterval = 10;
+    private int trackTimeMinute = 1;
     private String trackNetAddress;
 
-    SystemMonitor() {
+    private TestPostService testPostService;
+
+    @Autowired
+    public SystemMonitorService(TestPostService testPostService) {
+        this();
+        this.testPostService = testPostService;
+    }
+
+    public SystemMonitorService() {
         whatIsOs();
         getConfigVar();
     }
@@ -38,18 +56,13 @@ public class SystemMonitor {
         os = System.getProperty("os.name").toLowerCase();
     }
 
-    public void track() {
-        Timer timer = new Timer();
-        DataBaseManager dataBaseManager = new DataBaseManager(Constants.databaseUrl, Constants.databaseUsername, Constants.databasePassword);
-        try {
-            dataBaseManager.connect();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    @PostConstruct
+    public void startMonitoring() {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(this::track, 0, trackSecondsInterval, TimeUnit.SECONDS);
+    }
 
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
+    public void track() {
                 double rezTrackCpuUsage = 0;
                 if(trackCpu == 1) {
                     rezTrackCpuUsage = trackCpuUsage();
@@ -75,25 +88,14 @@ public class SystemMonitor {
                 }
                 System.out.println();
 
-                try {
-                    dataBaseManager.insertRecord(rezTrackCpuUsage, rezTrackRamUsage, rezTrackDiskUsage, rezTrackNetUsage);
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
+                Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                // Создание объекта TestPost (замените поля на соответствующие поля сущности)
+                TestPost testPost = new TestPost(timestamp, rezTrackCpuUsage, rezTrackRamUsage, rezTrackDiskUsage, rezTrackNetUsage);
 
-        timer.scheduleAtFixedRate(task, 0, 1000 * trackSecondsInterval);
+                // Сохранение в базе данных через сервис
+                testPostService.saveTestPost(testPost);
 
-        try {
-            Thread.sleep(trackTimeMinute * 60 * 1000); // Подождать trackTimeMinute минут
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
-        // Останавливаем таймер и задачу
-        task.cancel();
-        timer.cancel();
     }
 
     private double trackCpuUsage() {

@@ -1,5 +1,6 @@
-import java.io.IOException;
-import java.net.InetAddress;
+package com.example.temnikovJavaProject;
+
+
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.time.Duration;
@@ -65,3 +66,4 @@ public class DNS implements Comparable<DNS>{
     }
 
 }
+

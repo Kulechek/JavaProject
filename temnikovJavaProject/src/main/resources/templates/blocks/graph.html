@@ -1,0 +1,45 @@
+<div th:fragment="graph">
+    <canvas id="myChart"></canvas>
+    <script th:inline="javascript">
+        var testsData = /*[[${tests}]]*/ null; // Получите данные напрямую из Thymeleaf
+
+        var cpuData = [];
+        var ramData = [];
+        var diskData = [];
+        var labels = [];
+
+        for (var i = 0; i < testsData.length; i++) {
+            labels.push(i + 1);
+            cpuData.push(testsData[i].trackCpu);
+            ramData.push(testsData[i].trackRam);
+            diskData.push(testsData[i].trackDisk);
+        }
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'CPU',
+                    borderColor: 'red',
+                    data: cpuData
+                }, {
+                    label: 'RAM',
+                    borderColor: 'blue',
+                    data: ramData
+                }, {
+                    label: 'Disk',
+                    borderColor: 'green',
+                    data: diskData
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: 'Загрузка компьютера'
+                },
+            }
+        });
+    </script>
+</div>
